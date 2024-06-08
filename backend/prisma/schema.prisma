@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Certifique-se de definir a URL do banco de dados no arquivo .env
+}
+
+model tb_fornecedores {
+  for_codigo    BigInt @id @default(autoincrement())
+  for_descricao String @db.VarChar(45)
+
+  // Relacionamento com produtos
+  produtos tb_produtos[]
+}
+
+model tb_produtos {
+  pro_codigo   BigInt  @id @default(autoincrement())
+  pro_descricao String @db.VarChar(45)
+  pro_valor     Decimal @db.Decimal(10, 2)
+  pro_quantidade Int
+
+  // Relacionamento com fornecedores
+  fornecedor tb_fornecedores @relation(fields: [fornecedorId], references: [for_codigo])
+  fornecedorId BigInt
+
+  // Relacionamento com itens
+  itens tb_itens[]
+}
+
+model tb_funcionarios {
+  fun_codigo  BigInt  @id @default(autoincrement())
+  fun_nome    String  @db.VarChar(45)
+  fun_cpf     String  @db.VarChar(45)
+  fun_senha   String  @db.VarChar(50)
+  fun_funcao  String  @db.VarChar(50)
+
+  // Relacionamento com vendas
+  vendas tb_vendas[]
+}
+
+model tb_vendas {
+  ven_codigo   BigInt   @id @default(autoincrement())
+  ven_horario  DateTime @db.Timestamp(3)
+  ven_valor_total Decimal @db.Decimal(7, 2)
+
+  // Relacionamento com funcionários
+  funcionario tb_funcionarios @relation(fields: [funcionarioId], references: [fun_codigo])
+  funcionarioId BigInt
+
+  // Relacionamento com itens
+  itens tb_itens[]
+}
+
+model tb_itens {
+  ite_codigo     BigInt  @id @default(autoincrement())
+  ite_quantidade Int
+  ite_valor_parcial Decimal @db.Decimal(7, 2)
+
+  // Relacionamento com produtos
+  produto tb_produtos @relation(fields: [produtoId], references: [pro_codigo])
+  produtoId BigInt
+
+  // Relacionamento com vendas
+  venda tb_vendas @relation(fields: [vendaId], references: [ven_codigo])
+  vendaId BigInt
+}
