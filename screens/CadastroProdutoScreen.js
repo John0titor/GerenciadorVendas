@@ -1,67 +1,66 @@
-// screens/CadastroProdutoScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import axios from 'axios';
+import { View, Text, TextInput, Button, Alert } from 'react-native';
+import { useAuth } from '../context/AuthContext';
+import { commonStyles as styles } from '../styles/common';
+import config from '../config';
 
-export default function CadastroProdutoScreen() {
-  const [descricao, setDescricao] = useState('');
-  const [valor, setValor] = useState('');
-  const [quantidade, setQuantidade] = useState('');
+const CadastroProdutoScreen = () => {
+  const [pro_descricao, setProDescricao] = useState('');
+  const [pro_valor, setProValor] = useState('');
+  const [pro_quantidade, setProQuantidade] = useState('');
+  const { authToken } = useAuth();
 
-  const cadastrarProduto = async () => {
+  const handleCadastroProduto = async () => {
     try {
-      const response = await axios.post('http://192.168.3.246:3000/produtos', {
-        pro_descricao: descricao,
-        pro_valor: parseFloat(valor),
-        pro_quantidade: parseInt(quantidade, 10),
+      const response = await fetch(config.API_URL+'/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}` // Seu token de autorização
+        },
+        body: JSON.stringify({ pro_descricao, pro_valor, pro_quantidade  }),
       });
-      if (response.data) {
-        alert('Produto cadastrado com sucesso');
+
+      if (response.ok) {
+        Alert.alert('Sucesso', 'Produto cadastrado com sucesso');
+      } else {
+        const data = await response.json();
+        Alert.alert('Erro', data.error);
       }
     } catch (error) {
       console.error(error);
-      alert('Erro ao cadastrar produto');
+      Alert.alert('Erro', 'Erro ao cadastrar produto');
     }
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.label}>Descrição</Text>
       <TextInput
         style={styles.input}
-        placeholder="Descrição"
-        value={descricao}
-        onChangeText={setDescricao}
+        value={pro_descricao}
+        onChangeText={setProDescricao}
+        placeholder="Digite a descrição do produto"
       />
+      <Text style={styles.label}>Valor</Text>
       <TextInput
         style={styles.input}
-        placeholder="Valor"
-        value={valor}
-        onChangeText={setValor}
+        value={pro_valor}
+        onChangeText={setProValor}
+        placeholder="Digite o valor do produto"
         keyboardType="numeric"
       />
+      <Text style={styles.label}>Quantidade</Text>
       <TextInput
         style={styles.input}
-        placeholder="Quantidade"
-        value={quantidade}
-        onChangeText={setQuantidade}
+        value={pro_quantidade}
+        onChangeText={setProQuantidade}
+        placeholder="Digite a quantidade do produto"
         keyboardType="numeric"
       />
-      <Button title="Cadastrar Produto" onPress={cadastrarProduto} />
+      <Button title="Cadastrar Produto" onPress={handleCadastroProduto} />
     </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-  },
-});
+export default CadastroProdutoScreen;

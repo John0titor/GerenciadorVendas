@@ -1,74 +1,78 @@
-// screens/CadastroFuncionarioScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import axios from 'axios';
+import { View, Text, TextInput, Button, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { useAuth } from '../context/AuthContext';
+import { commonStyles as styles } from '../styles/common';
+import config from '../config';
 
-export default function CadastroFuncionarioScreen() {
-  const [nome, setNome] = useState('');
-  const [cpf, setCpf] = useState('');
-  const [senha, setSenha] = useState('');
-  const [funcao, setFuncao] = useState('');
+const CadastroFuncionarioScreen = () => {
+  const [fun_nome, setFunNome] = useState('');
+  const [fun_cpf, setFunCpf] = useState('');
+  const [fun_senha, setFunSenha] = useState('');
+  const [fun_funcao, setFunFuncao] = useState('vendedor');
+  const { authToken } = useAuth();
 
-  const cadastrar = async () => {
+  const handleCadastro = async () => {
     try {
-      const response = await axios.post('http://192.168.3.246:3000/users', {
-        fun_nome: nome,
-        fun_cpf: cpf,
-        fun_senha: senha,
-        fun_funcao: funcao,
+      const response = await fetch(config.API_URL+'/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ fun_nome, fun_cpf, fun_senha, fun_funcao }),
       });
-      if (response.data) {
-        alert('Usuário cadastrado com sucesso');
+
+      const data = await response.json();
+      if (response.ok) {
+        Alert.alert('Sucesso', 'Funcionário cadastrado com sucesso');
+      } else {
+        Alert.alert('Erro', data.error);
       }
     } catch (error) {
       console.error(error);
-      alert('Erro ao cadastrar usuário');
+      Alert.alert('Erro', 'Erro ao cadastrar funcionário');
     }
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.label}>Nome</Text>
       <TextInput
         style={styles.input}
-        placeholder="Nome"
-        value={nome}
-        onChangeText={setNome}
+        value={fun_nome}
+        onChangeText={setFunNome}
+        placeholder="Digite o nome do funcionário"
       />
+      <Text style={styles.label}>CPF</Text>
       <TextInput
         style={styles.input}
-        placeholder="CPF"
-        value={cpf}
-        onChangeText={setCpf}
+        value={fun_cpf}
+        onChangeText={setFunCpf}
+        placeholder="Digite o CPF"
+        keyboardType="numeric"
       />
+      <Text style={styles.label}>Senha</Text>
       <TextInput
         style={styles.input}
-        placeholder="Senha"
-        value={senha}
-        onChangeText={setSenha}
+        value={fun_senha}
+        onChangeText={setFunSenha}
+        placeholder="Digite a senha"
         secureTextEntry
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Função"
-        value={funcao}
-        onChangeText={setFuncao}
-      />
-      <Button title="Cadastrar" onPress={cadastrar} />
+      <Text style={styles.label}>Função</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={fun_funcao}
+          onValueChange={(itemValue) => setFunFuncao(itemValue)}
+        >
+          <Picker.Item label="Vendedor" value="vendedor" />
+          <Picker.Item label="Gerente" value="gerente" />
+        </Picker>
+      </View>
+      <Button title="Cadastrar Funcionário" onPress={handleCadastro} />
     </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-  },
-});
+export default CadastroFuncionarioScreen;
